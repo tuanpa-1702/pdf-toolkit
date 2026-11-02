@@ -1,0 +1,18 @@
+# Kết quả build (build.bat / build_noauthor.bat)
+build/
+dist/
+dist_noauthor/
+dist-*/
+office_addin/*.dll
+shell_ext/*.dll
+# sinh lúc build bằng collect_licenses.py (văn bản giấy phép gốc nằm ở licenses_src/)
+licenses/
+
+# Python
+__pycache__/
+*.pyc
+
+# file lớn / không thuộc dự án
+*.msi
+*.zip
+*.log
