@@ -141,8 +141,7 @@ class AboutDialog(QDialog):
 
         box = QWidget()
         box.setObjectName("supportBox")
-        box.setStyleSheet("#supportBox { background:qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #eff6ff, "
-                          "stop:1 #f5f3ff); border:1px solid #bfdbfe; border-radius:14px; }")
+        box.setStyleSheet("#supportBox { background:#eff6ff; border:1px solid #bfdbfe; border-radius:14px; }")
         bl = QVBoxLayout(box)
         bl.setContentsMargins(22, 18, 22, 18)
         bl.setSpacing(8)

@@ -80,7 +80,8 @@ IT cài hàng loạt (ví dụ qua script đăng nhập) bằng lệnh `"PDF Too
 ## Giao diện (v1.3)
 
 - **Trang chủ**: ô **Mở PDF** lớn ở trên cùng kèm danh sách file mở gần đây, bên dưới là lưới 75 công cụ có ô tìm kiếm (gõ không dấu cũng được). Nút **VI | EN** đổi ngôn ngữ giao diện. Màn hình công cụ có khung **xem trước** kết quả.
-- **Trình sửa**: thanh **ribbon theo tab giống Word**: Trang chủ (công cụ hay dùng), Chỉnh sửa, Chèn, Trang, Chuyển đổi, OCR & Tối ưu, Bảo mật & Ký số, Xem. Góc trái có nút nhanh Trang chủ / Mở / Lưu / Hoàn tác / Làm lại.
+- **Trình sửa**: thanh **ribbon theo tab giống Word**: Trang chủ (công cụ hay dùng), Chỉnh sửa, Chèn, Trang, Chuyển đổi, OCR & Tối ưu, Bảo mật & Ký số, Xem. Góc trái có nút nhanh Trang chủ / Mở / Lưu / Hoàn tác / Làm lại. Nút **^** ở góc phải (hoặc bấm đúp tên tab) thu gọn ribbon chỉ còn dải tab; bấm tên tab để mở lại.
+- **Giao diện Sáng / Tối / Theo Windows**: nút ☀ / ☾ cạnh VI | EN ở trang chủ, hoặc tab Xem PDF > Chế độ tối. Chế độ tối dùng nền xám than (không quá tối), chữ và icon sáng, màu nhấn giữ nguyên; trang PDF vẫn trắng như khi in. Thanh tiêu đề Windows cũng chuyển tối. Lựa chọn được ghi nhớ (`theme.py`).
 - Công cụ trong ribbon chạy thẳng trên file đang mở. Công cụ biến đổi (watermark, số trang, OCR, nén, cắt lề...) áp dụng vào tài liệu và **hoàn tác được bằng Ctrl+Z**. Công cụ xuất file (PDF → Word/Excel/ảnh, tách file...) lưu kết quả cạnh file gốc.
 - **Ghi chú**: rê chuột lên ghi chú để đọc, bấm để sửa / xoá.
 - **Ô form** và **chữ ký tay** (vẽ bằng chuột hoặc dùng ảnh, lưu lại để dùng lần sau) trong tab Chèn.
@@ -184,6 +185,7 @@ Build lại exe bằng cách nhấp đúp **`build.bat`**, kết quả nằm tro
 | `scanner.py` | Quét từ máy scan qua WIA (pywin32): mặt kính / khay ADF, màu, dpi, thông báo lỗi máy |
 | `pdf_tools.py` | 71 công cụ xử lý hàng loạt (gộp, tách, watermark, chuyển đổi, OCR, bảo mật...) |
 | `i18n.py`, `i18n_en.py` | Đổi ngôn ngữ VI / EN: chữ tiếng Việt trong mã nguồn là khoá, bản dịch tiếng Anh nằm trong i18n_en.py |
+| `theme.py` | Giao diện Sáng / Tối / Theo Windows: đổi màu stylesheet, palette, icon lúc chạy; thanh tiêu đề tối |
 | `filedlg.py` | Tách bộ lọc loại file (Word / Excel / PowerPoint...) cho hộp thoại chọn file của Windows |
 | `tools_ui.py` | Trang chủ lưới công cụ, màn hình công cụ, ribbon, hộp thoại chạy công cụ |
 | `about.py` | Hộp thoại Thông tin & hỗ trợ (email hỗ trợ: tuanpa1702@gmail.com) và Giấy phép bên thứ ba |

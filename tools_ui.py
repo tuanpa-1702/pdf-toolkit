@@ -13,16 +13,19 @@ import unicodedata
 import pymupdf
 
 from PySide6.QtCore import Qt, QRect, QSize, QSettings, QThread, QTimer, Signal
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtGui import (QActionGroup, QColor, QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QKeySequence, QPainter,
+                           QPixmap, QShortcut)
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QCheckBox, QColorDialog, QComboBox, QDialog, QDoubleSpinBox, QFileDialog,
                                QFormLayout, QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QHeaderView, QLabel, QLayout, QLineEdit,
                                QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
-                               QRadioButton, QScrollArea, QSizePolicy, QSpinBox, QSplitter, QTabWidget, QTableWidget,
+                               QRadioButton, QScrollArea, QSizePolicy, QSpinBox, QSplitter, QStackedWidget, QTabWidget,
+                               QTableWidget,
                                QTableWidgetItem, QToolButton, QVBoxLayout, QWidget)
 
 import i18n
 import installer
 import pdf_tools as T
+import theme
 
 ACCENT = "#2563eb"
 GROUP_COLORS = {"organize": "#2563eb", "stamp": "#d97706", "to_pdf": "#059669", "from_pdf": "#7c3aed",
@@ -44,7 +47,7 @@ def glyph_icon(code, color="#1e293b", mirror=False, size=64):
     f = QFont(_icon_font)
     f.setPixelSize(int(size * 0.62))
     p.setFont(f)
-    p.setPen(QColor(color))
+    p.setPen(QColor(theme.icon_color(color)))
     p.drawText(pm.rect(), Qt.AlignCenter, chr(code))
     p.end()
     if mirror:
@@ -60,7 +63,7 @@ def badge_pixmap(code, color, size=40):
     pm.fill(Qt.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.Antialiasing)
-    c = QColor(color)
+    c = QColor(theme.icon_color(color))
     bg = QColor(c)
     bg.setAlpha(28)
     p.setBrush(bg)
@@ -225,6 +228,7 @@ EDITOR_CARDS = [
 class HomePage(QWidget):
     toolChosen = Signal(str)
     langChosen = Signal(str)
+    themeChosen = Signal(str)                        # light | dark | system
     aboutRequested = Signal(int)        # 0 = thông tin & hỗ trợ, 1 = giấy phép bên thứ ba
     resumeRequested = Signal(int)       # quay lại tab tài liệu (-1 = tab đang chọn)
     supportMail = Signal()
@@ -325,6 +329,25 @@ class HomePage(QWidget):
             self.lang_btns[code] = b
         self.set_lang_buttons(i18n.LANG)
         hl.addWidget(lang, 0, Qt.AlignVCenter)
+        hl.addSpacing(8)
+        self.theme_btn = _CompactToolButton()          # giao diện Sáng / Tối / Theo Windows
+        self.theme_btn.setObjectName("setupBtn")
+        self.theme_btn.setIcon(glyph_icon(0xE708 if theme.DARK else 0xE706, "#334155"))
+        self.theme_btn.setIconSize(QSize(18, 18))
+        self.theme_btn.setPopupMode(QToolButton.InstantPopup)
+        self.theme_btn.setCursor(Qt.PointingHandCursor)
+        self.theme_btn.setToolTip("Giao diện: Sáng / Tối / Theo Windows")
+        m = QMenu(self.theme_btn)
+        tg = QActionGroup(m)
+        for mode, text, code in (("light", "Sáng", 0xE706), ("dark", "Tối", 0xE708),
+                                 ("system", "Theo Windows", 0xE7F4)):
+            a = m.addAction(glyph_icon(code, "#334155"), text)
+            a.setCheckable(True)
+            a.setChecked(theme.MODE == mode)
+            tg.addAction(a)
+            a.triggered.connect(lambda _=False, md=mode: self.themeChosen.emit(md))
+        self.theme_btn.setMenu(m)
+        hl.addWidget(self.theme_btn, 0, Qt.AlignVCenter)
         hl.addSpacing(8)
         self.setup_btn = _CompactToolButton()          # menu Cài đặt (gắn menu ở MainWindow)
         self.setup_btn.setObjectName("setupBtn")
@@ -1682,7 +1705,7 @@ def _tinted(icon, color, size):
         return pm
     p = QPainter(pm)
     p.setCompositionMode(QPainter.CompositionMode_SourceIn)
-    p.fillRect(pm.rect(), QColor(color))
+    p.fillRect(pm.rect(), QColor(theme.icon_color(color)))
     p.end()
     return pm
 
@@ -1909,7 +1932,11 @@ class Ribbon(QTabWidget):
 
     def toggle(self):
         self.collapsed = not self.collapsed
-        self.setFixedHeight(self.COLLAPSED if self.collapsed else self.FULL)
+        # thu gọn: ẩn hẳn phần nút (không để lộ mép thanh / thanh cuộn ngang), cao vừa đúng dải tab
+        stack = self.findChild(QStackedWidget, "qt_tabwidget_stackedwidget", Qt.FindDirectChildrenOnly)
+        if stack is not None:
+            stack.setVisible(not self.collapsed)
+        self.setFixedHeight(self.tabBar().sizeHint().height() + 6 if self.collapsed else self.FULL)
         self._collapse_icon()
 
     def tab(self, title, color=ACCENT):
@@ -2149,7 +2176,7 @@ QToolButton#resumeBtn:hover { background:#1d4ed8; }
 QToolButton#resumeBtn::menu-button { width:24px; border:none; border-left:1px solid #60a5fa;
                                      border-top-right-radius:10px; border-bottom-right-radius:10px; }
 QToolButton#resumeBtn::menu-button:hover { background:#1e40af; }
-#openCard { background:qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #eff6ff, stop:1 #f5f3ff);
+#openCard { background:#eff6ff;
             border:1px solid #bfdbfe; border-radius:14px; }
 QPushButton#openBig { background:#2563eb; color:white; font-size:14pt; font-weight:700; border:none; border-radius:10px;
                       padding:8px 22px; }
@@ -2169,7 +2196,7 @@ QToolButton#setupBtn::menu-indicator { image:none; width:0; }
 QToolButton#langBtn { padding:4px 12px; border-radius:7px; color:#475569; font-weight:600; border:none; }
 QToolButton#langBtn:checked { background:#2563eb; color:white; }
 QToolButton#langBtn:hover:!checked { background:#e2e8f0; }
-#ribbonHost { background:qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ece7fb, stop:0.5 #eef0fa, stop:1 #def5ee);
+#ribbonHost { background:#eef0f6;
               border-bottom:1px solid #e4e1f0; }
 #ribbon, #ribbonTab, #ribbonScroll, #ribbonScroll > QWidget { background:transparent; }
 #ribbonScroll QScrollBar:horizontal { height:10px; background:#e2e8f0; border-radius:5px; margin:1px 32px; }

@@ -31,6 +31,7 @@ import i18n
 import installer
 import pdf_core
 import pdf_tools
+import theme
 import tools_ui
 from pdf_core import PdfDocument, PdfError, get_text_lines, int_to_rgb
 
@@ -70,7 +71,7 @@ def glyph_icon(code, color="#1e293b", mirror=False):
     f = QFont(_icon_font)
     f.setPixelSize(40)
     p.setFont(f)
-    p.setPen(QColor(color))
+    p.setPen(QColor(theme.icon_color(color)))
     p.drawText(pm.rect(), Qt.AlignCenter, chr(code))
     p.end()
     if mirror:
@@ -3581,6 +3582,7 @@ class MainWindow(QMainWindow):
         self.home = tools_ui.HomePage(APP_TITLE, "Bộ công cụ PDF - chạy offline, file không rời khỏi máy")
         self.home.toolChosen.connect(self.open_tool)
         self.home.langChosen.connect(self.switch_language)
+        self.home.themeChosen.connect(self.switch_theme)
         self.home.aboutRequested.connect(self.show_about)
         self.home.resumeRequested.connect(self.resume_doc)
         self.home.supportMail.connect(lambda: about.send_support_mail(APP_VERSION))
@@ -3947,6 +3949,10 @@ class MainWindow(QMainWindow):
         g.big(self.a_thumbs, "Bảng trang")
         g = tab.group("Ứng dụng")
         g.big(self.a_home, "Tất cả công cụ")
+        self.a_theme = self._act("Chế độ tối", lambda: self.switch_theme("light" if theme.DARK else "dark"),
+                                 None, 0xE706 if theme.DARK else 0xE708,
+                                 "Chuyển giao diện Sáng / Tối (Theo Windows: chọn ở trang chủ)")
+        g.big(self.a_theme, "Chế độ sáng" if theme.DARK else "Chế độ tối")
 
         tab = rb.tab("Khác", "#d97706")                     # công cụ ghi chú / đánh dấu / vẽ
         g = tab.group("Công cụ")
@@ -5454,6 +5460,18 @@ class MainWindow(QMainWindow):
             return
         self.settings.setValue("lang", lang)
         i18n.set_lang(lang)
+        self._rebuild_window(on_home)
+
+    def switch_theme(self, mode):
+        """Đổi giao diện Sáng / Tối / Theo Windows: lưu lựa chọn, áp màu mới rồi dựng lại cửa sổ (giữ file đang mở)."""
+        on_home = self.stack.currentWidget() is self.home
+        if mode == theme.MODE or not self.confirm_discard_all():
+            return
+        self.settings.setValue("theme", mode)
+        apply_theme(QApplication.instance(), mode)
+        self._rebuild_window(on_home)
+
+    def _rebuild_window(self, on_home):
         paths = [d.pdf.path for d in self.docs
                  if d.pdf.doc is not None and d.pdf.path and os.path.exists(d.pdf.path)]
         active = self.pdf.path if self.pdf.path in paths else None
@@ -5542,6 +5560,7 @@ class MainWindow(QMainWindow):
         if not getattr(self, "_caption_hidden", False):
             self._caption_hidden = True
             hide_caption_text(self)
+            theme.dark_title_bar(self)
 
     def closeEvent(self, e):
         if self.tool_page.busy():
@@ -6697,6 +6716,15 @@ def hide_caption_text(win):
         pass
 
 
+def apply_theme(app, mode):
+    """Áp giao diện Sáng / Tối / Theo Windows cho cả app (palette + stylesheet + ảnh mũi tên)."""
+    theme.set_mode(mode)
+    theme.install_hooks()
+    theme.apply_palette(app)
+    app.setStyleSheet(theme.app_css(STYLE + tools_ui.TOOLS_STYLE))
+    prepare_style_assets(app)
+
+
 def prepare_style_assets(app):
     """Mũi tên của ô chọn / ô số (stylesheet có viền thì Qt không tự vẽ mũi tên): vẽ từ font icon Windows ra
     file PNG trong thư mục tạm rồi gắn vào stylesheet."""
@@ -6705,8 +6733,8 @@ def prepare_style_assets(app):
     # (nền trắng, chữ tối) để chữ không bao giờ lệch màu với nền
     pal = app.palette()
     for grp in (QPalette.Active, QPalette.Inactive, QPalette.Disabled):
-        pal.setColor(grp, QPalette.ToolTipBase, QColor("#ffffff"))
-        pal.setColor(grp, QPalette.ToolTipText, QColor("#1f2937"))
+        pal.setColor(grp, QPalette.ToolTipBase, QColor(theme.RAISED if theme.DARK else "#ffffff"))
+        pal.setColor(grp, QPalette.ToolTipText, QColor(theme.TEXT if theme.DARK else "#1f2937"))
     app.setPalette(pal)
     QToolTip.setPalette(pal)
     d = os.path.join(tempfile.gettempdir(), "PDFToolkit_ui")
@@ -7022,8 +7050,7 @@ def main():
     app.setApplicationName(APP_NAME)
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 10))
-    app.setStyleSheet(STYLE + tools_ui.TOOLS_STYLE)
-    prepare_style_assets(app)
+    apply_theme(app, QSettings(installer.ORG, "PDFToolkit").value("theme", "light"))   # Sáng / Tối / Theo Windows
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     icon = os.path.join(base, "app.ico")
     if os.path.exists(icon):
