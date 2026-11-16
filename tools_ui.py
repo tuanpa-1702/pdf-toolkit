@@ -1052,7 +1052,8 @@ class PreviewPane(QFrame):
         self.b_next.setAutoRaise(True)
         self.b_next.clicked.connect(lambda: self.turn(1))
         self.page_lbl = QLabel()
-        self.page_lbl.setStyleSheet("background:transparent")
+        self.page_lbl.setObjectName("previewPageLbl")
+        self.page_lbl.setStyleSheet("#previewPageLbl { background:transparent; }")     # không làm tooltip trong suốt
         self.info = QLabel()
         self.info.setWordWrap(True)
         self.info.setStyleSheet("color:#64748b; background:transparent")
@@ -1596,7 +1597,10 @@ class OpenCard(QFrame):
         # file gần đây: bên phải, xuống dưới khi hẹp, hẹp nữa thì ẩn bớt chip. Không góp vào độ rộng tối thiểu
         # của thẻ - nếu không, chip tên dài ép cả trang chủ rộng hơn màn hình (tràn nút Hỗ trợ, thẻ công cụ)
         self.recent_w = _ShrinkRow()
-        self.recent_w.setStyleSheet("background:transparent")
+        # nền trong suốt chỉ cho chính hàng này: viết trần "background:transparent" thì tooltip của các chip con
+        # cũng trong suốt -> hiện thành ô đen, chữ tối (khi Windows để giao diện tối)
+        self.recent_w.setObjectName("recentRow")
+        self.recent_w.setStyleSheet("#recentRow { background:transparent; }")
         self.recent_box = QHBoxLayout(self.recent_w)
         self.recent_box.setContentsMargins(0, 0, 0, 0)
         self.recent_box.setSpacing(8)

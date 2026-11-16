@@ -150,7 +150,8 @@ class AboutDialog(QDialog):
         bl.addWidget(t)
         d = QLabel("Gặp lỗi, cần thêm tính năng hoặc cần hướng dẫn sử dụng, vui lòng liên hệ qua email:")
         d.setWordWrap(True)
-        d.setStyleSheet("background:transparent")
+        d.setObjectName("supportText")
+        d.setStyleSheet("#supportText { background:transparent; }")      # không làm tooltip trong suốt
         bl.addWidget(d)
         mail = QLabel(f'<a href="mailto:{SUPPORT_EMAIL}" style="color:#1d4ed8; text-decoration:none">'
                       f'{SUPPORT_EMAIL}</a>')
